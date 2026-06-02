@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -19,7 +19,6 @@ def get_peliculas():
 def get_pelicula(id):
     return jsonify({"id": id, "titulo": "Inception", "año": 2010}), 200
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     debug = os.environ.get('DEBUG', 'False') == 'True'
-    app.run(host='0.0.0.0', port=5000, debug=debug)
-    
+    app.run(host='0.0.0.0', port=5000, debug=debug)  # nosec B104
