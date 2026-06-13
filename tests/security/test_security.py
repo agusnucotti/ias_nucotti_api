@@ -24,3 +24,4 @@ def test_endpoint_invalido_retorna_404():
     client = app.test_client()
     response = client.get('/ruta-invalida')
     assert response.status_code == 404
+
