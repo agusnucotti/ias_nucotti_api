@@ -3,7 +3,7 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.join(os.path.dirname(_file_), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def get_app():
     with patch('app.app.psycopg2.connect') as mock_connect:
