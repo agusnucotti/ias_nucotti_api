@@ -1,6 +1,9 @@
-from app.app import init_db, app
+from app.app import app, init_db
+
+with app.app_context():
+    init_db()
 
 if __name__ == '__main__':
-    init_db()
-    app.run(host='0.0.0.0', port=5000)  # nosec B104
-    
+    import os
+    debug = os.environ.get('DEBUG', 'False') == 'True'
+    app.run(host='0.0.0.0', port=5000, debug=debug)
