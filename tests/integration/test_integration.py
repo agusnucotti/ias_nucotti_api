@@ -22,4 +22,4 @@ def test_peliculas_retorna_lista():
         response = client.get('/peliculas')
         data = response.get_json()
         assert isinstance(data, list)
-        assert
+        assert len(data) > 0
