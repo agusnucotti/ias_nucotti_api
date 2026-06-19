@@ -1,33 +1,54 @@
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from flask import Flask, jsonify, request
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-from unittest.mock import patch, MagicMock
-from app.app import app
+app = Flask(__name__)
 
-def test_health():
-    client = app.test_client()
-    response = client.get('/health')
-    assert response.status_code == 200
+def get_db():
+    conn = psycopg2.connect(os.environ.get("DATABASE_URL"), cursor_factory=RealDictCursor)
+    return conn
 
-def test_get_peliculas():
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_conn.cursor.return_value = mock_cursor
-    mock_cursor.fetchall.return_value = []
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS peliculas (
+            id SERIAL PRIMARY KEY,
+            titulo VARCHAR(255) NOT NULL,
+            anio INTEGER NOT NULL
+        )
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
 
-    with patch('app.app.get_db', return_value=mock_conn):
-        client = app.test_client()
-        response = client.get('/peliculas')
-        assert response.status_code == 200
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok", "version": "1.0"}), 200
 
-def test_get_pelicula_por_id():
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_conn.cursor.return_value = mock_cursor
-    mock_cursor.fetchone.return_value = {"id": 1, "titulo": "Test", "anio": 2020}
+@app.route('/peliculas', methods=['GET'])
+def get_peliculas():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM peliculas ORDER BY id")
+    peliculas = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(list(peliculas)), 200
 
-    with patch('app.app.get_db', return_value=mock_conn):
-        client = app.test_client()
-        response = client.get('/peliculas/1')
-        assert response.status_code == 200
+@app.route('/peliculas/<int:id>', methods=['GET'])
+def get_pelicula(id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM peliculas WHERE id = %s", (id,))
+    pelicula = cur.fetchone()
+    cur.close()
+    conn.close()
+    if pelicula is None:
+        return jsonify({"error": "Pelicula no encontrada"}), 404
+    return jsonify(dict(pelicula)), 200
+
+@app.route('/peliculas', methods=['POST'])
+def create_pelicula():
+    data =
