@@ -25,7 +25,7 @@ def init_db():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok"}), 200
+    return jsonify({"status": "ok", "version": "1.0"}), 200
 
 @app.route('/peliculas', methods=['GET'])
 def get_peliculas():
