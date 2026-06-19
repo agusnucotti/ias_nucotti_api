@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from unittest.mock import patch, MagicMock
 from app.app import app
 
 def test_health():
@@ -10,11 +11,25 @@ def test_health():
     assert response.status_code == 200
 
 def test_get_peliculas():
-    client = app.test_client()
-    response = client.get('/peliculas')
-    assert response.status_code == 200
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+    mock_cursor.fetchall.return_value = []
+
+    with patch('app.app.get_db', return_value=mock_conn):
+        client = app.test_client()
+        response = client.get('/peliculas')
+        assert response.status_code == 200
 
 def test_get_pelicula_por_id():
-    client = app.test_client()
-    response = client.get('/peliculas/1')
-    assert response.status_code == 200
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+    mock_cursor.fetchone.return_value = {"id": 1, "titulo": "Test", "genero": "Accion"}
+
+    with patch('app.app.get_db', return_value=mock_conn):
+        client = app.test_client()
+        response = client.get('/peliculas/1')
+        assert response.status_code == 200
