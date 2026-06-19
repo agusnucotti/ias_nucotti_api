@@ -51,4 +51,35 @@ def get_pelicula(id):
 
 @app.route('/peliculas', methods=['POST'])
 def create_pelicula():
-    data =
+    data = request.get_json()
+    if not data or 'titulo' not in data or 'anio' not in data:
+        return jsonify({"error": "titulo y anio son requeridos"}), 400
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO peliculas (titulo, anio) VALUES (%s, %s) RETURNING *",
+        (data['titulo'], data['anio'])
+    )
+    nueva = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify(dict(nueva)), 201
+
+@app.route('/peliculas/<int:id>', methods=['DELETE'])
+def delete_pelicula(id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM peliculas WHERE id = %s RETURNING *", (id,))
+    eliminada = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    if eliminada is None:
+        return jsonify({"error": "Pelicula no encontrada"}), 404
+    return jsonify({"mensaje": "Pelicula eliminada"}), 200
+
+if __name__ == '__main__':
+    init_db()
+    debug = os.environ.get('DEBUG', 'False') == 'True'
+    app.run(host='0.0.0.0', port=5000, debug=debug)  # nosec B104
